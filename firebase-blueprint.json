@@ -1,0 +1,73 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Equipamento ou instrumento musical no catálogo da Wisbeck Company",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 200 },
+        "slug": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "maxLength": 100 },
+        "categorySlug": { "type": "string", "maxLength": 100 },
+        "brand": { "type": "string", "maxLength": 100 },
+        "price": { "type": "number" },
+        "stock": { "type": "number" },
+        "images": { "type": "array" },
+        "description": { "type": "string" },
+        "isBestSeller": { "type": "boolean" },
+        "isChurchSpecial": { "type": "boolean" }
+      },
+      "required": ["id", "name", "price", "stock", "brand", "category"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Pedido de compra finalizado na Wisbeck Company",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string", "maxLength": 30 },
+        "customer": { "type": "object" },
+        "address": { "type": "object" },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "discount": { "type": "number" },
+        "freightPrice": { "type": "number" },
+        "total": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["PIX", "CREDIT_CARD", "BOLETO"] },
+        "status": { "type": "string", "enum": ["pending", "paid", "processing", "shipped", "delivered", "cancelled"] },
+        "trackingCode": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "code", "customer", "address", "items", "total", "status"]
+    },
+    "Coupon": {
+      "title": "Coupon",
+      "description": "Cupom de desconto promocional",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string", "maxLength": 30 },
+        "discountType": { "type": "string", "enum": ["percentage", "fixed"] },
+        "value": { "type": "number" },
+        "minOrderValue": { "type": "number" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["id", "code", "discountType", "value", "active"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Catálogo público de produtos"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Pedidos realizados pelos clientes"
+    },
+    "/coupons/{couponId}": {
+      "schema": "Coupon",
+      "description": "Cupons de desconto gerenciados pelo admin"
+    }
+  }
+}

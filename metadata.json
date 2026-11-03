@@ -1,0 +1,6 @@
+{
+  "name": "Wisbeck Company - Som Profissional & Instrumentos",
+  "description": "E-commerce premium de Som Profissional, Instrumentos Musicais, Sonorização de Ambientes e Soluções para Igrejas e Estúdios.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
