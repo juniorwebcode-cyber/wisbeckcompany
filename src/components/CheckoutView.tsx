@@ -267,20 +267,8 @@ export const CheckoutView: React.FC = () => {
 
         // Open InfinitePay Checkout in a new tab
         window.open(result.url, '_blank');
-
-        // Advance user to success / thank you state with payment check options
-        setStep(4);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-
-        try {
-          confetti({
-            particleCount: 120,
-            spread: 70,
-            origin: { y: 0.6 },
-          });
-        } catch (e) {
-          // Fallback
-        }
+        
+        // Reset loading state but stay on payment step in case user needs to reopen or retry
       } else {
         throw new Error('Não foi possível obter a URL do checkout da InfinitePay.');
       }
