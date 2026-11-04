@@ -7,7 +7,8 @@ import {
   MessageCircle, 
   ShieldCheck, 
   Lock,
-  Church
+  Church,
+  ExternalLink
 } from 'lucide-react';
 import { useStore } from '../lib/store';
 
@@ -26,15 +27,25 @@ export const Footer: React.FC = () => {
         {/* Main Columns */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-10 border-b border-slate-200 text-xs">
           
-          {/* Col 1: Brand */}
-          <div className="space-y-3">
-            <img
-              src="https://i.postimg.cc/7YZqgm6W/Logo-corporativo-WISBECK-com-gradiente-colorido.png"
-              alt="Wisbeck Company"
-              className="h-10 w-auto object-contain"
-            />
-            <p className="text-slate-500 leading-relaxed">
-              Referência em <strong className="text-slate-800">Som Profissional</strong>, <strong className="text-slate-800">Instrumentos Musicais</strong> e <strong className="text-slate-800">Soluções para Igrejas</strong> e Sonorização de Ambientes.
+          {/* Col 1: Brand (Enlarged) */}
+          <div className="space-y-3.5">
+            <div className="flex items-center gap-3">
+              <img
+                src="https://i.postimg.cc/7YZqgm6W/Logo-corporativo-WISBECK-com-gradiente-colorido.png"
+                alt="Wisbeck Company - Som Profissional & Instrumentos Musicais"
+                className="h-14 sm:h-16 w-auto object-contain"
+              />
+              <div className="flex flex-col">
+                <span className="font-heading font-black text-xl sm:text-2xl text-slate-950 tracking-tight leading-none">
+                  WISBECK <span className="text-orange-600">COMPANY</span>
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">
+                  Som Profissional & Instrumentos
+                </span>
+              </div>
+            </div>
+            <p className="text-slate-500 leading-relaxed text-xs">
+              Referência em <strong className="text-slate-800">Som Profissional</strong>, <strong className="text-slate-800">Instrumentos Musicais</strong>, <strong className="text-slate-800">Soluções para Igrejas</strong> e Sonorização de Ambientes em Itajaí/SC.
             </p>
 
             <div className="flex items-center gap-2 pt-1">
@@ -42,17 +53,19 @@ export const Footer: React.FC = () => {
                 href={`https://instagram.com/${settings.instagram.replace('@', '')}`}
                 target="_blank"
                 rel="noreferrer"
-                className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-colors border border-slate-200"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors border border-slate-200"
                 title="Instagram Oficial"
               >
-                <Instagram className="w-4 h-4" />
+                <Instagram className="w-3.5 h-3.5 text-pink-600" />
+                <span>@wisbeckcompany</span>
               </a>
               <button
                 onClick={handleWhatsApp}
-                className="w-8 h-8 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 flex items-center justify-center transition-colors border border-emerald-200"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold transition-colors border border-emerald-200"
                 title="WhatsApp Oficial"
               >
-                <MessageCircle className="w-4 h-4" />
+                <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                <span>WhatsApp</span>
               </button>
             </div>
           </div>
@@ -188,17 +201,17 @@ export const Footer: React.FC = () => {
 
         </div>
 
-        {/* Bottom Bar with Discrete Center Link to /admin */}
+        {/* Bottom Bar: Copyright, Admin Button and Payment Methods */}
         <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
           <div>
             © {new Date().getFullYear()} Wisbeck Company – Som Profissional & Instrumentos Musicais. Todos os direitos reservados.
           </div>
 
-          {/* Discrete Center Link */}
+          {/* Admin Area Button */}
           <div className="flex items-center justify-center">
             <button
               onClick={() => openAdminLogin()}
-              className="text-slate-500 hover:text-slate-900 font-semibold transition-all flex items-center gap-1.5 py-1.5 px-3 rounded-lg hover:bg-slate-100 border border-slate-200 hover:border-slate-300 shadow-2xs"
+              className="text-slate-600 hover:text-slate-900 font-semibold transition-all flex items-center gap-1.5 py-1.5 px-3 rounded-lg hover:bg-slate-100 border border-slate-200 hover:border-slate-300 shadow-2xs"
               title="Acesso Administrativo da Loja"
             >
               <Lock className="w-3.5 h-3.5 text-orange-600" />
@@ -217,6 +230,57 @@ export const Footer: React.FC = () => {
             <span className="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[10px]">
               Boleto
             </span>
+          </div>
+        </div>
+
+        {/* Fale Conosco - Logo abaixo do Admin */}
+        <div className="mt-6 pt-5 border-t border-slate-200/90 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/80 p-4 rounded-2xl border border-slate-200">
+          <div className="text-center sm:text-left space-y-0.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-orange-600 flex items-center justify-center sm:justify-start gap-1">
+              <span>Atendimento Direto</span>
+            </span>
+            <h4 className="text-xs font-bold text-slate-900 font-heading">
+              Fale Conosco — Canais Oficiais Wisbeck Company
+            </h4>
+            <p className="text-[11px] text-slate-500">
+              Showroom físico em Itajaí/SC ou suporte técnico especializado online.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-2.5">
+            {/* Link WhatsApp */}
+            <a
+              href="https://wa.me/5547996288524?text=Ol%C3%A1%2C%20gostaria%20de%20falar%20com%20a%20Wisbeck%20Company%20sobre%20produtos%20de%20som%20e%20instrumentos."
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>WhatsApp: (47) 99628-8524</span>
+            </a>
+
+            {/* Link Google Maps */}
+            <a
+              href="https://maps.google.com/?q=Rua+Jos%C3%A9+Gall,+650+-+Dom+Bosco,+Itaja%C3%AD+-+SC,+88307-100"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-800 text-xs font-bold transition-all border border-slate-300 shadow-2xs hover:border-slate-400 active:scale-95"
+            >
+              <MapPin className="w-3.5 h-3.5 text-orange-600" />
+              <span>Ver no Google Maps</span>
+              <ExternalLink className="w-3 h-3 text-slate-400" />
+            </a>
+
+            {/* Link Rede Social (Instagram) */}
+            <a
+              href="https://instagram.com/wisbeckcompany"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95"
+            >
+              <Instagram className="w-3.5 h-3.5" />
+              <span>Instagram: @wisbeckcompany</span>
+            </a>
           </div>
         </div>
 

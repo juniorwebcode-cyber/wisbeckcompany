@@ -4,6 +4,10 @@ export interface Product {
   slug: string;
   category: string;
   categorySlug: string;
+  subcategory?: string;
+  subcategorySlug?: string;
+  subItem?: string;
+  subItemSlug?: string;
   brand: string;
   price: number;
   originalPrice?: number;
@@ -28,6 +32,14 @@ export interface Product {
   };
 }
 
+export interface SubcategoryGroup {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  items?: string[]; // e.g. ['Violão Nylon', 'Violão Corda de Aço', 'Violão Eletroacústico', 'Violão 12 Cordas']
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -35,6 +47,7 @@ export interface Category {
   iconName: string;
   description: string;
   subcategories: string[];
+  subGroups?: SubcategoryGroup[];
 }
 
 export interface Brand {
@@ -97,12 +110,15 @@ export interface Order {
   freightOption: FreightOption;
   freightPrice: number;
   total: number;
-  paymentMethod: 'PIX' | 'CREDIT_CARD' | 'BOLETO';
+  paymentMethod: 'PIX' | 'CREDIT_CARD' | 'BOLETO' | 'INFINITEPAY';
   installments?: number;
   status: 'pending' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   trackingCode?: string;
   notes?: string;
   whatsappMessageText: string;
+  checkoutUrl?: string;
+  infinitePayNsu?: string;
+  infinitePayTransactionId?: string;
 }
 
 export interface Coupon {

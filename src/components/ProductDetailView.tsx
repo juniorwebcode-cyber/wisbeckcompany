@@ -137,6 +137,28 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({ productId 
           >
             {product.category}
           </button>
+          {product.subcategory && (
+            <>
+              <span>/</span>
+              <button
+                onClick={() => navigateToCategory(product.categorySlug, product.subcategory)}
+                className="hover:text-slate-900 transition-colors"
+              >
+                {product.subcategory}
+              </button>
+            </>
+          )}
+          {product.subItem && (
+            <>
+              <span>/</span>
+              <button
+                onClick={() => navigateToCategory(product.categorySlug, product.subcategory, product.subItem)}
+                className="hover:text-slate-900 transition-colors font-medium text-orange-600"
+              >
+                {product.subItem}
+              </button>
+            </>
+          )}
           <span>/</span>
           <span className="text-slate-800 font-medium truncate max-w-xs">{product.name}</span>
         </div>

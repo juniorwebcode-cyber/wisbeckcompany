@@ -28,7 +28,10 @@ import {
   Church,
   Volume2,
   Mic,
-  Cable
+  Cable,
+  MapPin,
+  Instagram,
+  ExternalLink
 } from 'lucide-react';
 import { Product, Order, Coupon, StoreSettings, Category } from '../types';
 import { useStore } from '../lib/store';
@@ -89,85 +92,156 @@ export const AdminView: React.FC = () => {
 
   if (!isAdminLoggedIn) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white border border-slate-200 p-8 rounded-2xl shadow-xl space-y-6">
-          <div className="text-center space-y-2">
-            <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center mx-auto border border-orange-200">
-              <Lock className="w-6 h-6" />
+      <div className="min-h-screen bg-slate-100/80 text-slate-900 flex flex-col items-center justify-center p-4 py-8">
+        <div className="w-full max-w-md space-y-4">
+          
+          {/* Admin Login Card */}
+          <div className="w-full bg-white border border-slate-200 p-7 sm:p-8 rounded-2xl shadow-xl space-y-5">
+            {/* Enlarged Logo & Brand Name */}
+            <div className="text-center space-y-2.5">
+              <img
+                src="https://i.postimg.cc/7YZqgm6W/Logo-corporativo-WISBECK-com-gradiente-colorido.png"
+                alt="Wisbeck Company"
+                className="h-16 sm:h-20 w-auto object-contain mx-auto transition-transform hover:scale-105"
+              />
+              <div>
+                <h1 className="font-heading font-black text-xl sm:text-2xl text-slate-950 tracking-tight">
+                  WISBECK COMPANY
+                </h1>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-orange-600">
+                  Áudio Profissional & Instrumentos Musicais
+                </p>
+              </div>
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-center gap-1.5 text-xs text-slate-600">
+                <Lock className="w-3.5 h-3.5 text-orange-600" />
+                <span className="font-semibold text-slate-900">Área Administrativa Restrita</span>
+              </div>
             </div>
-            <h2 className="text-xl font-bold text-slate-950 font-heading">
-              Painel de Gestão Wisbeck
-            </h2>
-            <p className="text-xs text-slate-500">
-              Acesso restrito para administração do e-commerce.
+
+            <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
+              {loginError && (
+                <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span>{loginError}</span>
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <label className="text-slate-700 font-semibold">E-mail Administrativo</label>
+                <input
+                  type="email"
+                  required
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="admin@x.com"
+                  className="w-full bg-slate-50 text-slate-900 p-2.5 rounded-lg border border-slate-300 focus:bg-white focus:border-slate-900 focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-slate-700 font-semibold">Senha</label>
+                <input
+                  type="password"
+                  required
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full bg-slate-50 text-slate-900 p-2.5 rounded-lg border border-slate-300 focus:bg-white focus:border-slate-900 focus:outline-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-xs transition-colors shadow-xs"
+              >
+                Acessar Painel de Controle
+              </button>
+
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-[11px] text-slate-600 space-y-1.5">
+                <p className="font-semibold text-slate-800">Credenciais Administrativas Oficiais:</p>
+                <div className="flex items-center justify-between font-mono text-[11px]">
+                  <span>Login: <strong className="text-slate-950 font-bold">admin@x.com</strong></span>
+                  <span>Senha: <strong className="text-slate-950 font-bold">admin4321</strong></span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginEmail('admin@x.com');
+                    setLoginPassword('admin4321');
+                    adminLogin('admin@x.com', 'admin4321');
+                  }}
+                  className="w-full mt-1.5 py-1.5 px-3 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 font-bold text-center block transition-colors text-xs"
+                >
+                  Entrar Automaticamente como Admin
+                </button>
+              </div>
+            </form>
+
+            <div className="text-center pt-1">
+              <button
+                onClick={navigateToHome}
+                className="text-xs text-slate-500 hover:text-slate-900 font-semibold underline underline-offset-4"
+              >
+                ← Voltar para a Loja Virtual
+              </button>
+            </div>
+          </div>
+
+          {/* Fale Conosco Block Right Below Admin */}
+          <div className="w-full bg-white border border-slate-200 p-5 rounded-2xl shadow-sm text-center space-y-3">
+            <div className="flex items-center justify-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <h2 className="font-heading font-bold text-slate-900 text-sm">
+                Fale Conosco • Atendimento & Showroom
+              </h2>
+            </div>
+            <p className="text-[11px] text-slate-500">
+              Precisa de ajuda, suporte técnico ou quer visitar nosso showroom físico?
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs pt-1">
+              {/* WhatsApp */}
+              <a
+                href="https://wa.me/5547996288524"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold border border-emerald-200 transition-colors shadow-2xs"
+                title="Conversar no WhatsApp"
+              >
+                <MessageCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>WhatsApp</span>
+              </a>
+
+              {/* Google Maps */}
+              <a
+                href="https://maps.google.com/?q=Rua+Jos%C3%A9+Gall,+650+-+Dom+Bosco,+Itaja%C3%AD+-+SC,+88307-100"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 font-bold border border-blue-200 transition-colors shadow-2xs"
+                title="Ver endereço no Google Maps"
+              >
+                <MapPin className="w-4 h-4 text-blue-600 shrink-0" />
+                <span>Google Maps</span>
+              </a>
+
+              {/* Instagram */}
+              <a
+                href="https://instagram.com/wisbeckcompany"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-pink-50 hover:bg-pink-100 text-pink-800 font-bold border border-pink-200 transition-colors shadow-2xs"
+                title="Seguir no Instagram"
+              >
+                <Instagram className="w-4 h-4 text-pink-600 shrink-0" />
+                <span>Instagram</span>
+              </a>
+            </div>
+
+            <p className="text-[10px] text-slate-400 pt-1">
+              Rua José Gall, nº 650 – Dom Bosco, Itajaí/SC • Tel: (47) 99628-8524
             </p>
           </div>
 
-          <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
-            {loginError && (
-              <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600" />
-                <span>{loginError}</span>
-              </div>
-            )}
-
-            <div className="space-y-1">
-              <label className="text-slate-700 font-semibold">E-mail Administrativo</label>
-              <input
-                type="email"
-                required
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="admin@x.com"
-                className="w-full bg-slate-50 text-slate-900 p-2.5 rounded-lg border border-slate-300 focus:bg-white focus:border-slate-900 focus:outline-none"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-slate-700 font-semibold">Senha</label>
-              <input
-                type="password"
-                required
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-slate-50 text-slate-900 p-2.5 rounded-lg border border-slate-300 focus:bg-white focus:border-slate-900 focus:outline-none"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-xs transition-colors shadow-xs"
-            >
-              Acessar Painel
-            </button>
-
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-[11px] text-slate-600 space-y-1">
-              <p className="font-semibold text-slate-800">Credenciais Administrativas Oficiais:</p>
-              <p>E-mail: <strong className="text-slate-950">admin@x.com</strong></p>
-              <p>Senha: <strong className="text-slate-950">admin4321</strong></p>
-              <button
-                type="button"
-                onClick={() => {
-                  setLoginEmail('admin@x.com');
-                  setLoginPassword('admin4321');
-                  adminLogin('admin@x.com', 'admin4321');
-                }}
-                className="w-full mt-2 py-1.5 px-3 rounded bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 font-bold text-center block transition-colors"
-              >
-                Entrar Automaticamente como Admin
-              </button>
-            </div>
-          </form>
-
-          <div className="text-center">
-            <button
-              onClick={navigateToHome}
-              className="text-xs text-slate-500 hover:text-slate-800"
-            >
-              ← Voltar para a Loja Virtual
-            </button>
-          </div>
         </div>
       </div>
     );
@@ -195,12 +269,26 @@ export const AdminView: React.FC = () => {
       ? editingProduct.images
       : ['https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=1000&auto=format&fit=crop'];
 
+    const subcategory = editingProduct.subcategory?.trim() || undefined;
+    const subcategorySlug = subcategory
+      ? (editingProduct.subcategorySlug || subcategory.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''))
+      : undefined;
+
+    const subItem = editingProduct.subItem?.trim() || undefined;
+    const subItemSlug = subItem
+      ? (editingProduct.subItemSlug || subItem.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''))
+      : undefined;
+
     const fullProduct: Product = {
       id,
       name: editingProduct.name,
       slug,
       category: editingProduct.category || 'Áudio Profissional',
       categorySlug: editingProduct.categorySlug || 'audio-profissional',
+      subcategory,
+      subcategorySlug,
+      subItem,
+      subItemSlug,
       brand: editingProduct.brand || 'Shure',
       price: Number(editingProduct.price),
       originalPrice: editingProduct.originalPrice ? Number(editingProduct.originalPrice) : undefined,
@@ -341,6 +429,19 @@ export const AdminView: React.FC = () => {
           .filter(Boolean)
       : (editingCategory.subcategories || []);
 
+    const existingGroups = editingCategory.subGroups || [];
+    const subGroups = parsedSubcategories.map((sub) => {
+      const existing = existingGroups.find((g) => g.name.toLowerCase() === sub.toLowerCase());
+      if (existing) return existing;
+      const slug = sub.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+      return {
+        id: `sg-${slug}`,
+        name: sub,
+        slug,
+        items: [] as string[],
+      };
+    });
+
     const fullCategory: Category = {
       id: editingCategory.id || `cat-${Date.now()}`,
       name,
@@ -348,6 +449,7 @@ export const AdminView: React.FC = () => {
       iconName: editingCategory.iconName || 'Speaker',
       description: editingCategory.description?.trim() || '',
       subcategories: parsedSubcategories,
+      subGroups,
     };
 
     saveCategory(fullCategory);
@@ -382,29 +484,64 @@ export const AdminView: React.FC = () => {
     <div className="min-h-screen bg-slate-100/70 text-slate-900 flex flex-col font-sans">
       
       {/* Top Navbar */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 px-6 py-3 flex items-center justify-between shadow-xs">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 px-4 sm:px-6 py-2.5 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
           <img
             src="https://i.postimg.cc/7YZqgm6W/Logo-corporativo-WISBECK-com-gradiente-colorido.png"
             alt="Wisbeck Company"
-            className="h-8 w-auto object-contain"
+            className="h-10 sm:h-12 w-auto object-contain transition-transform hover:scale-105"
           />
-          <div className="hidden sm:block border-l border-slate-200 pl-3">
-            <span className="text-xs font-bold text-slate-900 block leading-tight">
-              Painel de Controle
+          <div className="border-l border-slate-200 pl-3">
+            <span className="text-sm font-black font-heading text-slate-950 block leading-tight tracking-tight">
+              WISBECK COMPANY
             </span>
-            <span className="text-[10px] text-slate-500">
-              admin@x.com • Showroom Itajaí/SC
+            <span className="text-[10px] text-slate-500 hidden sm:block">
+              Painel de Gestão • Showroom Itajaí/SC
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-xs">
+        <div className="flex items-center gap-2 sm:gap-3 text-xs">
+          {/* Quick Fale Conosco links */}
+          <div className="hidden lg:flex items-center gap-1.5 border-r border-slate-200 pr-3 mr-1 text-[11px]">
+            <a
+              href="https://wa.me/5547996288524"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-medium transition-colors"
+              title="WhatsApp Showroom"
+            >
+              <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+              <span>WhatsApp</span>
+            </a>
+            <a
+              href="https://maps.google.com/?q=Rua+Jos%C3%A9+Gall,+650+-+Dom+Bosco,+Itaja%C3%AD+-+SC,+88307-100"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-50 text-blue-800 hover:bg-blue-100 font-medium transition-colors"
+              title="Google Maps Itajaí"
+            >
+              <MapPin className="w-3.5 h-3.5 text-blue-600" />
+              <span>Google Maps</span>
+            </a>
+            <a
+              href="https://instagram.com/wisbeckcompany"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-pink-50 text-pink-800 hover:bg-pink-100 font-medium transition-colors"
+              title="Instagram Oficial"
+            >
+              <Instagram className="w-3.5 h-3.5 text-pink-600" />
+              <span>Instagram</span>
+            </a>
+          </div>
+
           <button
             onClick={navigateToHome}
-            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold border border-slate-200 transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold border border-slate-200 transition-colors flex items-center gap-1"
           >
-            Ver Loja Virtual
+            <span>Ver Loja Virtual</span>
+            <ExternalLink className="w-3 h-3 text-slate-500" />
           </button>
 
           <button
@@ -542,6 +679,44 @@ export const AdminView: React.FC = () => {
             <FileText className="w-4 h-4" />
             <span>Relatórios em CSV</span>
           </button>
+
+          {/* Fale Conosco Quick Box in Sidebar */}
+          <div className="pt-4 mt-4 border-t border-slate-200">
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                Fale Conosco Wisbeck
+              </span>
+              <div className="space-y-1.5 text-[11px]">
+                <a
+                  href="https://wa.me/5547996288524"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-slate-700 hover:text-emerald-600 font-medium transition-colors"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>(47) 99628-8524</span>
+                </a>
+                <a
+                  href="https://maps.google.com/?q=Rua+Jos%C3%A9+Gall,+650+-+Dom+Bosco,+Itaja%C3%AD+-+SC,+88307-100"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-slate-700 hover:text-blue-600 font-medium transition-colors"
+                >
+                  <MapPin className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Itajaí/SC Showroom</span>
+                </a>
+                <a
+                  href="https://instagram.com/wisbeckcompany"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-slate-700 hover:text-pink-600 font-medium transition-colors"
+                >
+                  <Instagram className="w-3.5 h-3.5 text-pink-600" />
+                  <span>@wisbeckcompany</span>
+                </a>
+              </div>
+            </div>
+          </div>
         </aside>
 
         {/* Content Area */}
@@ -782,7 +957,19 @@ export const AdminView: React.FC = () => {
                             </td>
                             <td className="p-3 font-semibold text-slate-900 max-w-xs truncate">{prod.name}</td>
                             <td className="p-3 font-medium text-slate-600">{prod.brand}</td>
-                            <td className="p-3 text-slate-600">{prod.category}</td>
+                            <td className="p-3">
+                              <span className="font-semibold text-slate-900 block">{prod.category}</span>
+                              {prod.subcategory && (
+                                <span className="inline-block mt-0.5 bg-orange-50 text-orange-700 text-[10px] font-semibold px-1.5 py-0.5 rounded border border-orange-200">
+                                  {prod.subcategory}
+                                </span>
+                              )}
+                              {prod.subItem && (
+                                <span className="block text-[10px] text-slate-500 font-medium truncate max-w-[170px]" title={prod.subItem}>
+                                  ↳ {prod.subItem}
+                                </span>
+                              )}
+                            </td>
                             <td className="p-3 font-bold text-slate-950">
                               R$ {prod.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </td>
@@ -1393,6 +1580,10 @@ export const AdminView: React.FC = () => {
                         ...editingProduct,
                         category: val,
                         categorySlug: matched?.slug || 'audio-profissional',
+                        subcategory: '',
+                        subcategorySlug: '',
+                        subItem: '',
+                        subItemSlug: '',
                       });
                     }}
                     className="w-full bg-slate-50 text-slate-900 p-2.5 rounded-lg border border-slate-300"
@@ -1403,6 +1594,130 @@ export const AdminView: React.FC = () => {
                       </option>
                     ))}
                   </select>
+                </div>
+              </div>
+
+              {/* Hierarchical Subcategory & Sub-item / Tipo */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-slate-700 font-semibold text-[11px]">Subcategoria (Nível 2)</label>
+                    <span className="text-[10px] text-orange-600 font-medium">Ex: Violão, Guitarras</span>
+                  </div>
+                  {(() => {
+                    const currentCat = categories.find(
+                      (c) => c.name === editingProduct?.category || c.slug === editingProduct?.categorySlug
+                    );
+                    const availableSubs = Array.from(
+                      new Set([
+                        ...(currentCat?.subGroups?.map((sg) => sg.name) || []),
+                        ...(currentCat?.subcategories || []),
+                      ])
+                    );
+
+                    return (
+                      <div className="space-y-1.5">
+                        <select
+                          value={editingProduct?.subcategory || ''}
+                          onChange={(e) => {
+                            const sub = e.target.value;
+                            const matchedGroup = currentCat?.subGroups?.find(
+                              (sg) => sg.name === sub || sg.slug === sub.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+                            );
+                            setEditingProduct({
+                              ...editingProduct,
+                              subcategory: sub === '__custom__' ? '' : sub,
+                              subcategorySlug: matchedGroup?.slug || (sub && sub !== '__custom__' ? sub.toLowerCase().replace(/[^a-z0-9]+/g, '-') : ''),
+                              subItem: '',
+                              subItemSlug: '',
+                            });
+                          }}
+                          className="w-full bg-white text-slate-900 p-2 rounded-lg border border-slate-300 text-xs"
+                        >
+                          <option value="">-- Nenhuma subcategoria --</option>
+                          {availableSubs.map((sub) => (
+                            <option key={sub} value={sub}>
+                              {sub}
+                            </option>
+                          ))}
+                          <option value="__custom__">+ Digitar outra subcategoria...</option>
+                        </select>
+                        {(editingProduct?.subcategory === '' || !availableSubs.includes(editingProduct?.subcategory || '')) && editingProduct?.subcategory !== undefined && (
+                          <input
+                            type="text"
+                            placeholder="Nome da subcategoria..."
+                            value={editingProduct?.subcategory || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditingProduct({
+                                ...editingProduct,
+                                subcategory: val,
+                                subcategorySlug: val.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+                              });
+                            }}
+                            className="w-full bg-white text-slate-900 p-2 rounded-lg border border-slate-300 text-xs"
+                          />
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-slate-700 font-semibold text-[11px]">Tipo / Sub-item (Nível 3)</label>
+                    <span className="text-[10px] text-orange-600 font-medium">Ex: Violão Nylon, Violão Aço</span>
+                  </div>
+                  {(() => {
+                    const currentCat = categories.find(
+                      (c) => c.name === editingProduct?.category || c.slug === editingProduct?.categorySlug
+                    );
+                    const matchedGroup = currentCat?.subGroups?.find(
+                      (sg) => sg.name === editingProduct?.subcategory || sg.slug === editingProduct?.subcategorySlug
+                    );
+                    const availableItems = matchedGroup?.items || [];
+
+                    return (
+                      <div className="space-y-1.5">
+                        <select
+                          value={editingProduct?.subItem || ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setEditingProduct({
+                              ...editingProduct,
+                              subItem: val === '__custom__' ? '' : val,
+                              subItemSlug: val && val !== '__custom__' ? val.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '',
+                            });
+                          }}
+                          className="w-full bg-white text-slate-900 p-2 rounded-lg border border-slate-300 text-xs"
+                        >
+                          <option value="">-- Nenhum tipo específico --</option>
+                          {availableItems.map((item) => (
+                            <option key={item} value={item}>
+                              {item}
+                            </option>
+                          ))}
+                          <option value="__custom__">+ Digitar outro tipo...</option>
+                        </select>
+                        {(editingProduct?.subItem === '' || !availableItems.includes(editingProduct?.subItem || '')) && editingProduct?.subItem !== undefined && (
+                          <input
+                            type="text"
+                            placeholder="Ex: Violão Nylon, Violão Corda de Aço..."
+                            value={editingProduct?.subItem || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditingProduct({
+                                ...editingProduct,
+                                subItem: val,
+                                subItemSlug: val.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+                              });
+                            }}
+                            className="w-full bg-white text-slate-900 p-2 rounded-lg border border-slate-300 text-xs"
+                          />
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 

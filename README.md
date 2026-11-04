@@ -10,7 +10,7 @@
 - **Instagram:** [@wisbeckcompany](https://instagram.com/wisbeckcompany)
 - **WhatsApp Oficial:** (47) 99284-8840
 - **Logo Oficial:** `https://i.postimg.cc/7YZqgm6W/Logo-corporativo-WISBECK-com-gradiente-colorido.png`
-- **Paleta de Cores:** Extraída 100% da logo oficial (laranja `#ff5722` → amarelo `#f59e0b` → vermelho `#ef4444` → roxo `#8b5cf6` → azul `#3b82f6`) sobre tons dark de fundo (`#0b0c12`, `#12131e`).
+- **Paleta de Cores:** Design Claro Editorial & Premium (fundo `#f8fafc` / `#ffffff`, tipografia Plus Jakarta Sans & Space Grotesk, contrastes elegantes `#0f172a`, gradiente de destaque Wisbeck laranja `#f97316` / âmbar `#f59e0b`).
 
 ---
 
@@ -20,11 +20,11 @@
 - **Senha:** `admin4321`
 
 ### Funcionalidades do Painel Admin:
-1. **Dashboard Completo:** Métricas em tempo real (Total de Vendas R$, Pedidos Realizados, Produtos em Estoque, Ticket Médio), gráfico de vendas dos últimos 7 dias, gráfico de faturamento por categoria e tabela de pedidos recentes.
-2. **Gestão de Produtos (CRUD Completo):** Cadastro, edição e remoção de produtos, controle de estoque, preço normal e PIX, marcas, categorias e tags especiais (*Mais Vendido*, *Especial Igrejas*, *Lançamento*).
-3. **Upload de Fotos via Vercel Blob:** Suporte a upload de fotos com persistência na nuvem Vercel Blob e fallback instantâneo.
+1. **Dashboard Completo:** Métricas em tempo real (Total de Vendas R$, Pedidos Realizados, Produtos em Estoque, Ticket Médio), gráfico de faturamento por categoria e tabela de pedidos recentes.
+2. **Gestão de Categorias (CRUD Completo):** Criar, editar nome, ícone, descrição e remover categorias diretamente pelo painel administrativo, com atualização automática em toda a loja.
+3. **Gestão de Produtos (CRUD Completo):** Cadastro, edição e remoção de produtos, controle de estoque, preço normal e PIX, marcas, seleção dinâmica de categorias cadastradas e tags especiais (*Mais Vendido*, *Especial Igrejas*, *Lançamento*).
 4. **Gerador de Cupons:** Criação de cupons percentuais ou de valor fixo, prazo de validade, pedido mínimo e limite de utilização.
-5. **Gestão de Pedidos:** Acompanhamento de pedidos, alteração de status (*Pendente, Pago, Em Separação, Enviado nos Correios, Entregue, Cancelado*), inserção de código de rastreamento dos Correios e link direto para chamar o cliente no WhatsApp.
+5. **Gestão de Pedidos:** Acompanhamento de pedidos, alteração de status (*Pendente, Pago, Em Separação, Enviado nos Correios, Entregue, Cancelado*), inserção de código de rastreamento dos Correios e link direto para chamar o cliente no WhatsApp com mensagem personalizada.
 6. **CMS da Loja:** Edição do banner de anúncio superior, valor mínimo para frete grátis, porcentagem de desconto do PIX, horário de funcionamento e endereço do showroom.
 7. **Controle de Redes Sociais & Contatos:** Edição do WhatsApp, Instagram, telefone e e-mail.
 8. **Relatórios:** Exportação em 1 clique de relatórios completos de vendas e inventário de produtos em formato **CSV**.
@@ -39,49 +39,37 @@
 
 ---
 
-## 🔥 4. Configuração do Firebase
-O sistema possui arquitetura **Zero-Config Dual-Mode**: funciona imediatamente com banco local sincronizado e conecta-se automaticamente ao seu projeto Firebase assim que as variáveis forem fornecidas.
+## 🔥 4. Autoconfiguração do Firebase
+O sistema vem pré-configurado e com fallback integrado (`firebase-applet-config.json`).
+Você pode subir diretamente no Vercel que ele funcionará imediatamente! Caso queira usar suas próprias chaves no Vercel:
 
-### Passos para criar o projeto no Firebase:
-1. Acesse o [Firebase Console](https://console.firebase.google.com/) e clique em **Adicionar projeto** (nome sugerido: `wisbeck-company`).
-2. No menu lateral, acerte em **Firestore Database** → **Criar banco de dados** (escolha modo produção).
-3. Em **Regras** (Rules), cole o conteúdo do arquivo `firestore.rules` fornecido no projeto.
-4. Em **Authentication**, ative o provedor **E-mail/Senha**.
-5. Crie o usuário administrador com o e-mail `admin@x.com` e a senha `admin4321`.
-6. Em **Configurações do Projeto** (ícone da engrenagem), role até a seção **Seus aplicativos**, adicione um app Web e copie as credenciais para o seu `.env`:
+Adicione as variáveis de ambiente no painel da **Vercel** (`Settings` -> `Environment Variables`):
 ```env
 VITE_FIREBASE_API_KEY="sua_api_key"
 VITE_FIREBASE_AUTH_DOMAIN="seu_projeto.firebaseapp.com"
 VITE_FIREBASE_PROJECT_ID="seu_projeto"
-VITE_FIREBASE_STORAGE_BUCKET="seu_projeto.appspot.com"
+VITE_FIREBASE_STORAGE_BUCKET="seu_projeto.firebasestorage.app"
 VITE_FIREBASE_MESSAGING_SENDER_ID="seu_sender_id"
 VITE_FIREBASE_APP_ID="seu_app_id"
+VITE_FIREBASE_FIRESTORE_DATABASE_ID="(default)"
 ```
 
 ---
 
-## ☁️ 5. Configuração do Vercel Blob
-1. No dashboard da [Vercel](https://vercel.com/), acesse seu projeto ou crie um novo.
-2. Vá na aba **Storage** → **Create Database** → selecione **Blob**.
-3. Escolha um nome (ex: `wisbeck-media`) e clique em **Create**.
-4. A Vercel gerará o token `BLOB_READ_WRITE_TOKEN`. Adicione-o às variáveis de ambiente do projeto na Vercel ou no seu arquivo `.env`:
-```env
-BLOB_READ_WRITE_TOKEN="vercel_blob_rw_..."
-```
+## 🚀 5. Como Subir e Colocar Online no Vercel (Sem Erros)
 
----
+O projeto já conta com o arquivo `vercel.json` configurado com regras de rewrite para SPA (Single Page Application), garantindo que rotas como `/admin`, `/carrinho` ou links diretos nunca dêem erro 404 ao recarregar a página.
 
-## 🚀 6. Como Rodar Localmente e Fazer Deploy
-
-### Executar Localmente:
-```bash
-npm install
-npm run dev
-```
-Acesse `http://localhost:3000`.
-
-### Fazer Deploy no Vercel:
-1. Conecte o repositório ao Vercel (`vercel` ou via GitHub).
-2. Adicione as variáveis de ambiente descritas acima.
-3. Comando de build: `npm run build`
-4. Diretório de saída: `dist`
+### Passo a Passo no Vercel:
+1. Suba o código para o seu repositório no **GitHub** ou **GitLab**.
+2. Acesse [vercel.com](https://vercel.com) e clique em **"Add New"** > **"Project"**.
+3. Importe o seu repositório.
+4. Na tela de configuração:
+   - **Framework Preset:** Vite
+   - **Root Directory:** `./`
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+   - **Install Command:** `npm install`
+5. (Opcional) Em **Environment Variables**, adicione as chaves do Firebase se desejar sobrepor as padrões.
+6. Clique em **Deploy**.
+7. Pronto! Seu site estará 100% online com certificado SSL gratuito, CDN global ultrarrápida e todas as rotas funcionando perfeitamente.

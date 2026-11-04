@@ -16,9 +16,25 @@
         "images": { "type": "array" },
         "description": { "type": "string" },
         "isBestSeller": { "type": "boolean" },
-        "isChurchSpecial": { "type": "boolean" }
+        "isChurchSpecial": { "type": "boolean" },
+        "subcategory": { "type": "string", "maxLength": 100 },
+        "subItem": { "type": "string", "maxLength": 100 }
       },
       "required": ["id", "name", "price", "stock", "brand", "category"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Categorias e subcategorias de produtos da loja",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "slug": { "type": "string", "maxLength": 100 },
+        "iconName": { "type": "string" },
+        "description": { "type": "string" },
+        "subcategories": { "type": "array" }
+      },
+      "required": ["id", "name", "slug"]
     },
     "Order": {
       "title": "Order",

@@ -3,12 +3,12 @@ import { Product, Category, Brand, CartItem, Order, Coupon, StoreSettings } from
 import { INITIAL_PRODUCTS, INITIAL_CATEGORIES, INITIAL_BRANDS, INITIAL_COUPONS, INITIAL_ORDERS, INITIAL_SETTINGS } from './mockData';
 import { syncOrderToFirebase, syncProductToFirebase, updateOrderStatusInFirebase } from './firebase';
 
-const STORAGE_KEY_PRODUCTS = 'wisbeck_products_v1';
-const STORAGE_KEY_CATEGORIES = 'wisbeck_categories_v1';
+const STORAGE_KEY_PRODUCTS = 'wisbeck_products_v2';
+const STORAGE_KEY_CATEGORIES = 'wisbeck_categories_v2';
 const STORAGE_KEY_CART = 'wisbeck_cart_v1';
 const STORAGE_KEY_ORDERS = 'wisbeck_orders_v1';
 const STORAGE_KEY_COUPONS = 'wisbeck_coupons_v1';
-const STORAGE_KEY_SETTINGS = 'wisbeck_settings_v1';
+const STORAGE_KEY_SETTINGS = 'wisbeck_settings_v2';
 const STORAGE_KEY_ADMIN_AUTH = 'wisbeck_admin_auth_v1';
 const STORAGE_KEY_WISHLIST = 'wisbeck_wishlist_v1';
 
@@ -21,7 +21,8 @@ export type ViewType =
   | 'about' 
   | 'contact' 
   | 'orders-tracker' 
-  | 'admin';
+  | 'admin'
+  | 'obrigado';
 
 export interface StoreState {
   products: Product[];
@@ -36,6 +37,8 @@ export interface StoreState {
   currentView: ViewType;
   selectedProductId: string | null;
   selectedCategory: string | null;
+  selectedSubcategory: string | null;
+  selectedSubItem: string | null;
   selectedBrand: string | null;
   searchQuery: string;
   isCartOpen: boolean;
@@ -86,8 +89,15 @@ export function getStoredCoupons(): Coupon[] {
 
 export function getStoredSettings(): StoreSettings {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY_SETTINGS);
-    if (raw) return JSON.parse(raw);
+    const raw = localStorage.getItem(STORAGE_KEY_SETTINGS) || localStorage.getItem('wisbeck_settings_v1');
+    if (raw) {
+      const parsed: StoreSettings = JSON.parse(raw);
+      if (parsed.whatsapp && parsed.whatsapp.includes('99284')) {
+        parsed.whatsapp = '(47) 99628-8524';
+        localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(parsed));
+      }
+      return parsed;
+    }
   } catch (e) {
     console.error(e);
   }
@@ -136,6 +146,8 @@ let state: StoreState = {
   currentView: 'home',
   selectedProductId: null,
   selectedCategory: null,
+  selectedSubcategory: null,
+  selectedSubItem: null,
   selectedBrand: null,
   searchQuery: '',
   isCartOpen: false,
@@ -197,7 +209,26 @@ export function setSelectedProductId(id: string | null) {
 }
 
 export function setSelectedCategory(cat: string | null) {
-  updateState({ selectedCategory: cat });
+  updateState({ 
+    selectedCategory: cat,
+    selectedSubcategory: null,
+    selectedSubItem: null,
+  });
+}
+
+export function setSelectedSubcategory(sub: string | null) {
+  updateState({ 
+    selectedSubcategory: sub,
+    selectedSubItem: null,
+    currentView: 'catalog',
+  });
+}
+
+export function setSelectedSubItem(item: string | null) {
+  updateState({ 
+    selectedSubItem: item,
+    currentView: 'catalog',
+  });
 }
 
 export function setSelectedBrand(brand: string | null) {
@@ -481,9 +512,11 @@ export function navigateToProduct(productId: string) {
   }
 }
 
-export function navigateToCategory(slug: string) {
+export function navigateToCategory(slug: string, subcategory?: string, subItem?: string) {
   updateState({
     selectedCategory: slug,
+    selectedSubcategory: subcategory || null,
+    selectedSubItem: subItem || null,
     selectedBrand: null,
     searchQuery: '',
     currentView: 'catalog',
@@ -497,6 +530,8 @@ export function navigateToBrand(brandName: string) {
   updateState({
     selectedBrand: brandName,
     selectedCategory: null,
+    selectedSubcategory: null,
+    selectedSubItem: null,
     searchQuery: '',
     currentView: 'catalog',
   });
@@ -509,6 +544,8 @@ export function navigateToHome() {
   updateState({
     selectedProductId: null,
     selectedCategory: null,
+    selectedSubcategory: null,
+    selectedSubItem: null,
     selectedBrand: null,
     searchQuery: '',
     currentView: 'home',
@@ -529,6 +566,8 @@ export function openAdminLogin() {
     currentView: 'admin',
     selectedProductId: null,
     selectedCategory: null,
+    selectedSubcategory: null,
+    selectedSubItem: null,
   });
   if (typeof window !== 'undefined') {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -540,6 +579,8 @@ const actions = {
   setCurrentView,
   setSelectedProductId,
   setSelectedCategory,
+  setSelectedSubcategory,
+  setSelectedSubItem,
   setSelectedBrand,
   setSearchQuery,
   setIsCartOpen,

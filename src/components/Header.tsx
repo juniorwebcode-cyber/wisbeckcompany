@@ -8,12 +8,20 @@ import {
   Menu, 
   X, 
   ChevronDown, 
+  ChevronRight,
   Church,
   ShieldCheck,
   MapPin,
-  Lock
+  Lock,
+  Speaker,
+  Music,
+  Volume2,
+  Mic,
+  Cable,
+  ArrowRight
 } from 'lucide-react';
 import { useStore } from '../lib/store';
+import { Category } from '../types';
 
 export const Header: React.FC = () => {
   const {
@@ -36,8 +44,21 @@ export const Header: React.FC = () => {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState(false);
+  const [hoveredCategory, setHoveredCategory] = useState<Category | null>(null);
+  const [expandedMobileCategory, setExpandedMobileCategory] = useState<string | null>(null);
   const [brandsDropdownOpen, setBrandsDropdownOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  const getCatIcon = (slug: string) => {
+    switch (slug) {
+      case 'audio-profissional': return <Speaker className="w-4 h-4 text-orange-600" />;
+      case 'instrumentos-musicais': return <Music className="w-4 h-4 text-amber-600" />;
+      case 'solucoes-para-igrejas': return <Church className="w-4 h-4 text-purple-600" />;
+      case 'som-ambiente': return <Volume2 className="w-4 h-4 text-blue-600" />;
+      case 'home-studio': return <Mic className="w-4 h-4 text-emerald-600" />;
+      default: return <Cable className="w-4 h-4 text-slate-600" />;
+    }
+  };
 
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const cartSubtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
@@ -128,16 +149,27 @@ export const Header: React.FC = () => {
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
 
-        {/* Brand Wordmark & Official Logo */}
+        {/* Brand Wordmark & Official Logo - Enlarged and Prominent */}
         <div
           onClick={navigateToHome}
-          className="cursor-pointer flex items-center gap-3 shrink-0 transition-opacity hover:opacity-90"
+          className="cursor-pointer flex items-center gap-3 sm:gap-3.5 shrink-0 transition-all hover:opacity-95 group py-0.5"
+          title="Wisbeck Company - Ir para página inicial"
         >
           <img
             src="https://i.postimg.cc/7YZqgm6W/Logo-corporativo-WISBECK-com-gradiente-colorido.png"
             alt="Wisbeck Company - Som Profissional & Instrumentos Musicais"
-            className="h-10 sm:h-11 w-auto object-contain"
+            className="h-12 sm:h-14 md:h-16 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
           />
+          <div className="flex flex-col">
+            <span className="font-heading font-black text-xl sm:text-2xl md:text-[26px] tracking-tight text-slate-950 leading-none group-hover:text-orange-600 transition-colors">
+              WISBECK <span className="text-orange-600">COMPANY</span>
+            </span>
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 mt-1 flex items-center gap-1.5">
+              <span>SOM PROFISSIONAL</span>
+              <span className="text-orange-500">•</span>
+              <span>INSTRUMENTOS</span>
+            </span>
+          </div>
         </div>
 
         {/* Search Bar */}
@@ -299,35 +331,141 @@ export const Header: React.FC = () => {
 
               {categoriesDropdownOpen && (
                 <div
-                  onMouseLeave={() => setCategoriesDropdownOpen(false)}
-                  className="absolute left-0 top-full w-64 bg-white border border-slate-200 rounded-lg shadow-lg py-1.5 z-50 divide-y divide-slate-100"
+                  onMouseLeave={() => {
+                    setCategoriesDropdownOpen(false);
+                    setHoveredCategory(null);
+                  }}
+                  className="absolute left-0 top-full w-[740px] bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden flex divide-x divide-slate-100 animate-in fade-in-50 zoom-in-95 duration-150"
                 >
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.id}
-                      onClick={() => {
-                        navigateToCategory(cat.slug);
-                        setCategoriesDropdownOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700 hover:text-slate-900 text-xs font-medium flex items-center justify-between"
-                    >
-                      <span>{cat.name}</span>
-                      <span className="text-slate-400 text-[10px]">›</span>
-                    </button>
-                  ))}
+                  {/* Left Column: Categories List */}
+                  <div className="w-64 bg-slate-50/70 p-2.5 space-y-1 shrink-0">
+                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Departamentos
+                    </div>
+                    {categories.map((cat) => {
+                      const isHovered = (hoveredCategory?.id || categories[0]?.id) === cat.id;
+                      return (
+                        <div
+                          key={cat.id}
+                          onMouseEnter={() => setHoveredCategory(cat)}
+                          onClick={() => {
+                            navigateToCategory(cat.slug);
+                            setCategoriesDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-3 py-2.5 rounded-xl cursor-pointer text-xs font-semibold flex items-center justify-between transition-colors ${
+                            isHovered
+                              ? 'bg-white text-orange-600 shadow-xs border border-slate-200/90'
+                              : 'text-slate-700 hover:bg-slate-100/80'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            {getCatIcon(cat.slug)}
+                            <span className="truncate">{cat.name}</span>
+                          </div>
+                          <ChevronRight className={`w-3.5 h-3.5 shrink-0 ${isHovered ? 'text-orange-500' : 'text-slate-400'}`} />
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Right Column: Subcategories & Child Items */}
+                  <div className="flex-1 p-5 bg-white max-h-[480px] overflow-y-auto">
+                    {(() => {
+                      const active = hoveredCategory || categories[0];
+                      if (!active) return null;
+
+                      return (
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <div>
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-orange-600">
+                                Subcategorias de {active.name}
+                              </span>
+                              <h4 className="text-sm font-extrabold text-slate-900 font-heading">
+                                {active.name}
+                              </h4>
+                            </div>
+                            <button
+                              onClick={() => {
+                                navigateToCategory(active.slug);
+                                setCategoriesDropdownOpen(false);
+                              }}
+                              className="text-xs font-semibold text-orange-600 hover:text-orange-700 flex items-center gap-1 group"
+                            >
+                              <span>Ver tudo</span>
+                              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                            </button>
+                          </div>
+
+                          {/* Subgroups with Nested items */}
+                          {active.subGroups && active.subGroups.length > 0 ? (
+                            <div className="grid grid-cols-2 gap-3.5">
+                              {active.subGroups.map((group) => (
+                                <div key={group.id} className="space-y-2 bg-slate-50/60 p-3 rounded-xl border border-slate-100/80">
+                                  <button
+                                    onClick={() => {
+                                      navigateToCategory(active.slug, group.name);
+                                      setCategoriesDropdownOpen(false);
+                                    }}
+                                    className="font-bold text-xs text-slate-900 hover:text-orange-600 transition-colors flex items-center justify-between w-full text-left"
+                                  >
+                                    <span>{group.name}</span>
+                                    <span className="text-[10px] text-slate-400 font-normal">Todos ›</span>
+                                  </button>
+
+                                  {group.items && group.items.length > 0 && (
+                                    <ul className="space-y-1 pl-1">
+                                      {group.items.map((subItem) => (
+                                        <li key={subItem}>
+                                          <button
+                                            onClick={() => {
+                                              navigateToCategory(active.slug, group.name, subItem);
+                                              setCategoriesDropdownOpen(false);
+                                            }}
+                                            className="text-[11px] text-slate-600 hover:text-orange-600 transition-colors block text-left truncate w-full hover:translate-x-0.5"
+                                          >
+                                            • {subItem}
+                                          </button>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-2 gap-2">
+                              {active.subcategories.map((sub) => (
+                                <button
+                                  key={sub}
+                                  onClick={() => {
+                                    navigateToCategory(active.slug, sub);
+                                    setCategoriesDropdownOpen(false);
+                                  }}
+                                  className="text-left text-xs p-2 rounded-lg hover:bg-orange-50 hover:text-orange-700 font-medium text-slate-700 transition-colors"
+                                >
+                                  • {sub}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
                 </div>
               )}
             </div>
 
             <button
               onClick={() => navigateToCategory('audio-profissional')}
-              className="py-2.5 px-3 hover:text-orange-600 transition-colors"
+              className="py-2.5 px-3 hover:text-orange-600 transition-colors font-medium"
             >
               Áudio Profissional
             </button>
             <button
               onClick={() => navigateToCategory('instrumentos-musicais')}
-              className="py-2.5 px-3 hover:text-orange-600 transition-colors"
+              className="py-2.5 px-3 hover:text-orange-600 transition-colors font-medium"
             >
               Instrumentos Musicais
             </button>
@@ -343,13 +481,13 @@ export const Header: React.FC = () => {
 
             <button
               onClick={() => navigateToCategory('som-ambiente')}
-              className="py-2.5 px-3 hover:text-orange-600 transition-colors"
+              className="py-2.5 px-3 hover:text-orange-600 transition-colors font-medium"
             >
               Som Ambiente
             </button>
             <button
               onClick={() => navigateToCategory('home-studio')}
-              className="py-2.5 px-3 hover:text-orange-600 transition-colors"
+              className="py-2.5 px-3 hover:text-orange-600 transition-colors font-medium"
             >
               Home Studio & Podcast
             </button>
@@ -400,27 +538,93 @@ export const Header: React.FC = () => {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-b border-slate-200 px-4 py-4 space-y-3">
-          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Categorias</div>
-          <div className="flex flex-col gap-1 text-xs">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => {
-                  navigateToCategory(cat.slug);
-                  setMobileMenuOpen(false);
-                }}
-                className="text-left py-2 px-3 rounded-md hover:bg-slate-100 text-slate-800 font-medium"
-              >
-                {cat.name}
-              </button>
-            ))}
+        <div className="lg:hidden bg-white border-b border-slate-200 px-4 py-4 space-y-3 max-h-[80vh] overflow-y-auto">
+          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            Departamentos & Subcategorias
+          </div>
+          <div className="flex flex-col gap-1.5 text-xs">
+            {categories.map((cat) => {
+              const isExpanded = expandedMobileCategory === cat.id;
+              return (
+                <div key={cat.id} className="border border-slate-100 rounded-xl overflow-hidden">
+                  <div className="flex items-center justify-between p-2.5 bg-slate-50/70">
+                    <button
+                      onClick={() => {
+                        navigateToCategory(cat.slug);
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 font-bold text-slate-800 text-left flex-1"
+                    >
+                      {getCatIcon(cat.slug)}
+                      <span>{cat.name}</span>
+                    </button>
+                    <button
+                      onClick={() => setExpandedMobileCategory(isExpanded ? null : cat.id)}
+                      className="p-1.5 text-slate-500 hover:text-slate-900 rounded-md"
+                    >
+                      <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                    </button>
+                  </div>
+
+                  {isExpanded && (
+                    <div className="p-3 bg-white space-y-3 border-t border-slate-100">
+                      {cat.subGroups ? (
+                        cat.subGroups.map((grp) => (
+                          <div key={grp.id} className="space-y-1.5 pl-2 border-l-2 border-orange-200">
+                            <button
+                              onClick={() => {
+                                navigateToCategory(cat.slug, grp.name);
+                                setMobileMenuOpen(false);
+                              }}
+                              className="font-bold text-xs text-slate-900 hover:text-orange-600 block text-left"
+                            >
+                              {grp.name}
+                            </button>
+                            {grp.items && (
+                              <div className="flex flex-wrap gap-1 pt-1">
+                                {grp.items.map((item) => (
+                                  <button
+                                    key={item}
+                                    onClick={() => {
+                                      navigateToCategory(cat.slug, grp.name, item);
+                                      setMobileMenuOpen(false);
+                                    }}
+                                    className="text-[10px] bg-slate-100 hover:bg-orange-100 hover:text-orange-800 text-slate-700 px-2 py-0.5 rounded-md"
+                                  >
+                                    {item}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="flex flex-wrap gap-1">
+                          {cat.subcategories.map((sub) => (
+                            <button
+                              key={sub}
+                              onClick={() => {
+                                navigateToCategory(cat.slug, sub);
+                                setMobileMenuOpen(false);
+                              }}
+                              className="text-[11px] bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-slate-700"
+                            >
+                              {sub}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             <button
               onClick={() => {
                 setCurrentView('church-solutions');
                 setMobileMenuOpen(false);
               }}
-              className="text-left py-2 px-3 rounded-md bg-orange-50 text-orange-800 font-semibold flex items-center gap-2"
+              className="text-left py-2.5 px-3 rounded-xl bg-orange-50 text-orange-800 font-semibold flex items-center gap-2 border border-orange-200/80"
             >
               <Church className="w-4 h-4 text-orange-600" />
               Soluções para Igrejas & Templos

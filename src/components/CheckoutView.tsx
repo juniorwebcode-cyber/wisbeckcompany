@@ -12,11 +12,15 @@ import {
   Loader2, 
   Lock, 
   Copy, 
-  Building2
+  Building2,
+  AlertCircle,
+  ExternalLink,
+  Sparkles
 } from 'lucide-react';
 import { CustomerInfo, Address, FreightOption, Order } from '../types';
 import { useStore } from '../lib/store';
 import { fetchAddressByCep, calculateCorreiosFreight, formatCep, cleanCep } from '../lib/correios';
+import { createInfinitePayCheckoutLink, toCents, InfinitePayItem } from '../lib/infinitepay';
 
 export const CheckoutView: React.FC = () => {
   const {
@@ -24,6 +28,7 @@ export const CheckoutView: React.FC = () => {
     settings,
     activeCoupon,
     createOrder,
+    clearCart,
     navigateToHome,
     showToast,
   } = useStore();
@@ -51,9 +56,12 @@ export const CheckoutView: React.FC = () => {
   const [freightOptions, setFreightOptions] = useState<FreightOption[]>([]);
   const [selectedFreight, setSelectedFreight] = useState<FreightOption | null>(null);
 
-  const [paymentMethod, setPaymentMethod] = useState<'PIX' | 'CREDIT_CARD' | 'BOLETO'>('PIX');
+  const [paymentChoice, setPaymentChoice] = useState<'PIX' | 'CREDIT_CARD'>('PIX');
   const [installments, setInstallments] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [checkoutRedirectUrl, setCheckoutRedirectUrl] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
   const [copiedPix, setCopiedPix] = useState(false);
 
@@ -69,7 +77,7 @@ export const CheckoutView: React.FC = () => {
   }
 
   const discountedSubtotal = Math.max(0, subtotal - couponDiscount);
-  const pixDiscount = paymentMethod === 'PIX' ? (discountedSubtotal * settings.pixDiscountPercent) / 100 : 0;
+  const pixDiscount = paymentChoice === 'PIX' ? (discountedSubtotal * settings.pixDiscountPercent) / 100 : 0;
   const freightPrice = selectedFreight ? selectedFreight.price : 0;
   const total = discountedSubtotal - pixDiscount + freightPrice;
   const totalWeight = cart.reduce((acc, it) => acc + (it.product.weightKg || 1) * it.quantity, 0);
@@ -134,8 +142,13 @@ export const CheckoutView: React.FC = () => {
   };
 
   const handleFinalizeOrder = async () => {
-    if (!selectedFreight) return;
+    if (!selectedFreight) {
+      showToast('Selecione uma opção de envio.', 'error');
+      return;
+    }
+
     setIsSubmitting(true);
+    setErrorMessage(null);
 
     try {
       const orderItems = cart.map((item) => ({
@@ -147,6 +160,10 @@ export const CheckoutView: React.FC = () => {
         image: item.product.images[0],
       }));
 
+      // Unique order NSU identifier for InfinitePay
+      const orderNsu = `PEDIDO-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
+
+      // Save order in local store and sync to Firebase
       const newOrder = await createOrder({
         customer,
         address,
@@ -157,25 +174,122 @@ export const CheckoutView: React.FC = () => {
         freightOption: selectedFreight,
         freightPrice: selectedFreight.price,
         total,
-        paymentMethod,
-        installments: paymentMethod === 'CREDIT_CARD' ? installments : undefined,
+        paymentMethod: 'INFINITEPAY',
+        installments: paymentChoice === 'CREDIT_CARD' ? installments : undefined,
       });
 
       setCompletedOrder(newOrder);
-      setStep(4);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
 
-      try {
-        confetti({
-          particleCount: 100,
-          spread: 60,
-          origin: { y: 0.6 },
+      // Prepares items strictly in integer cents (e.g. R$ 100,00 = 10000)
+      const totalInCents = toCents(total);
+      const freightInCents = toCents(selectedFreight.price);
+      const netProductsCents = Math.max(100, totalInCents - freightInCents);
+
+      let infinitePayItems: InfinitePayItem[] = [];
+
+      if (cart.length === 1) {
+        infinitePayItems = [
+          {
+            quantity: cart[0].quantity,
+            price: Math.max(1, Math.round(netProductsCents / cart[0].quantity)),
+            description: cart[0].product.name.slice(0, 80),
+          },
+        ];
+      } else {
+        let runningSum = 0;
+        infinitePayItems = cart.map((item, idx) => {
+          const itemWeight = (item.product.price * item.quantity) / (subtotal || 1);
+          if (idx === cart.length - 1) {
+            const itemTotal = netProductsCents - runningSum;
+            const unitPrice = Math.max(1, Math.round(itemTotal / item.quantity));
+            return {
+              quantity: item.quantity,
+              price: unitPrice,
+              description: item.product.name.slice(0, 80),
+            };
+          }
+          const itemTotal = Math.round(netProductsCents * itemWeight);
+          runningSum += itemTotal;
+          const unitPrice = Math.max(1, Math.round(itemTotal / item.quantity));
+          return {
+            quantity: item.quantity,
+            price: unitPrice,
+            description: item.product.name.slice(0, 80),
+          };
         });
-      } catch (e) {
-        // Confetti fallback
       }
-    } catch (err) {
-      showToast('Erro ao criar pedido. Tente novamente.', 'error');
+
+      if (freightInCents > 0) {
+        infinitePayItems.push({
+          quantity: 1,
+          price: freightInCents,
+          description: `Envio ${selectedFreight.name} (${selectedFreight.carrier})`,
+        });
+      }
+
+      // Check sum of items and adjust 1 cent if rounding difference exists
+      const currentSum = infinitePayItems.reduce((acc, it) => acc + it.price * it.quantity, 0);
+      const diff = totalInCents - currentSum;
+      if (diff !== 0 && infinitePayItems.length > 0) {
+        infinitePayItems[0].price += diff;
+      }
+
+      const redirectUrl = `${window.location.origin}/obrigado?nsu=${encodeURIComponent(orderNsu)}`;
+      const webhookUrl = `${window.location.origin}/api/webhook-infinitepay`;
+
+      // Request payment link to InfinitePay API
+      const result = await createInfinitePayCheckoutLink({
+        order_nsu: orderNsu,
+        items: infinitePayItems,
+        customer: {
+          name: customer.name,
+          email: customer.email,
+          phone_number: customer.phone,
+        },
+        address: {
+          cep: address.cep,
+          street: address.street,
+          number: address.number,
+          neighborhood: address.neighborhood,
+          complement: address.complement,
+          city: address.city,
+          state: address.state,
+        },
+        redirect_url: redirectUrl,
+        webhook_url: webhookUrl,
+      });
+
+      if (result.success && result.url) {
+        setCheckoutRedirectUrl(result.url);
+        setIsRedirecting(true);
+        clearCart();
+        showToast('Link do Checkout InfinitePay gerado! Abrindo aba de pagamento...', 'success');
+
+        // Open InfinitePay Checkout in a new tab
+        window.open(result.url, '_blank');
+
+        // Advance user to success / thank you state with payment check options
+        setStep(4);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        try {
+          confetti({
+            particleCount: 120,
+            spread: 70,
+            origin: { y: 0.6 },
+          });
+        } catch (e) {
+          // Fallback
+        }
+      } else {
+        throw new Error('Não foi possível obter a URL do checkout da InfinitePay.');
+      }
+    } catch (err: any) {
+      console.error('Erro ao processar InfinitePay:', err);
+      setErrorMessage(
+        err?.message || 'Falha ao conectar com o Checkout da InfinitePay. Por favor, tente novamente.'
+      );
+      showToast('Erro ao iniciar pagamento InfinitePay.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -497,114 +611,153 @@ export const CheckoutView: React.FC = () => {
               </form>
             )}
 
-            {/* STEP 3: PAYMENT */}
+            {/* STEP 3: PAYMENT - INFINITEPAY INTEGRATED CHECKOUT */}
             {step === 3 && (
               <div className="space-y-4">
-                <div>
-                  <h3 className="text-base font-bold text-slate-950 font-heading">
-                    3. Forma de Pagamento
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Aproveite <strong className="text-emerald-700">10% de desconto imediato</strong> pagando via PIX.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('PIX')}
-                    className={`p-3 rounded-lg border text-center transition-colors flex flex-col items-center gap-1.5 ${
-                      paymentMethod === 'PIX'
-                        ? 'bg-emerald-50 border-emerald-500 text-emerald-900 font-bold'
-                        : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-                    }`}
-                  >
-                    <QrCode className="w-5 h-5 text-emerald-600" />
-                    <span className="text-xs">PIX (10% OFF)</span>
-                    <span className="text-[10px] text-emerald-700 font-semibold">Instantâneo</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('CREDIT_CARD')}
-                    className={`p-3 rounded-lg border text-center transition-colors flex flex-col items-center gap-1.5 ${
-                      paymentMethod === 'CREDIT_CARD'
-                        ? 'bg-slate-100 border-slate-900 text-slate-950 font-bold'
-                        : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-                    }`}
-                  >
-                    <CreditCard className="w-5 h-5 text-slate-800" />
-                    <span className="text-xs">Cartão de Crédito</span>
-                    <span className="text-[10px] text-slate-500">Até 12x</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('BOLETO')}
-                    className={`p-3 rounded-lg border text-center transition-colors flex flex-col items-center gap-1.5 ${
-                      paymentMethod === 'BOLETO'
-                        ? 'bg-slate-100 border-slate-900 text-slate-950 font-bold'
-                        : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-                    }`}
-                  >
-                    <Building2 className="w-5 h-5 text-slate-800" />
-                    <span className="text-xs">Boleto Bancário</span>
-                    <span className="text-[10px] text-slate-500">1 a 3 dias</span>
-                  </button>
-                </div>
-
-                {paymentMethod === 'PIX' && (
-                  <div className="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-1">
-                    <p className="font-bold">Economia de R$ {pixDiscount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} garantida com o PIX!</p>
-                    <p className="text-[11px] text-emerald-800">
-                      O QR code oficial e a chave Pix Copia e Cola serão gerados ao confirmar o pedido.
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-950 font-heading flex items-center gap-2">
+                      <span>3. Pagamento Seguro InfinitePay</span>
+                      <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full uppercase">
+                        Oficial
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Pague com Pix (com 10% OFF imediato) ou Cartão de crédito em até 12x via InfinitePay.
                     </p>
                   </div>
-                )}
+                  
 
-                {paymentMethod === 'CREDIT_CARD' && (
-                  <div className="space-y-2 text-xs bg-slate-50 p-3.5 rounded-lg border border-slate-200">
-                    <label className="block text-slate-700 font-semibold">Selecione as Parcelas</label>
-                    <select
-                      value={installments}
-                      onChange={(e) => setInstallments(Number(e.target.value))}
-                      className="w-full bg-white text-slate-900 p-2.5 rounded-lg border border-slate-300 focus:outline-none"
-                    >
-                      {[...Array(12)].map((_, i) => {
-                        const n = i + 1;
-                        const val = (discountedSubtotal + freightPrice) / n;
-                        return (
-                          <option key={n} value={n}>
-                            {n}x de R$ {val.toFixed(2).replace('.', ',')} sem juros ({n === 1 ? 'à vista' : 'no cartão'})
-                          </option>
-                        );
-                      })}
-                    </select>
+                </div>
+
+                {/* Error Banner if any */}
+                {errorMessage && (
+                  <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs flex items-start gap-2.5">
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-bold">Aviso no processamento do pagamento:</p>
+                      <p className="text-[11px] text-rose-700 mt-0.5">{errorMessage}</p>
+                    </div>
                   </div>
                 )}
 
-                {paymentMethod === 'BOLETO' && (
-                  <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-700">
-                    <p className="font-semibold text-slate-900">Boleto com vencimento em 3 dias úteis.</p>
-                    <p className="text-[11px] text-slate-500">O despacho nos Correios ocorre após a compensação bancária.</p>
+                {/* Payment Methods Selection Box */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* PIX Option */}
+                  <div
+                    onClick={() => setPaymentChoice('PIX')}
+                    className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between space-y-3 ${
+                      paymentChoice === 'PIX'
+                        ? 'bg-emerald-50/70 border-emerald-500 shadow-xs'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                          <QrCode className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-900 text-sm">Pix Instantâneo</p>
+                          <p className="text-[11px] text-emerald-700 font-bold">10% de desconto à vista</p>
+                        </div>
+                      </div>
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        checked={paymentChoice === 'PIX'}
+                        onChange={() => setPaymentChoice('PIX')}
+                        className="accent-emerald-600 mt-1"
+                      />
+                    </div>
+                    <div className="text-[11px] text-slate-600 bg-white/80 p-2.5 rounded-lg border border-slate-200/60 space-y-1">
+                      <p className="font-medium text-emerald-950">
+                        ✓ QR Code gerado automaticamente no checkout InfinitePay
+                      </p>
+                      <p className="text-[10px] text-slate-500">
+                        Aprovação em segundos e liberação imediata para expedição.
+                      </p>
+                    </div>
                   </div>
-                )}
 
+                  {/* Credit Card Option */}
+                  <div
+                    onClick={() => setPaymentChoice('CREDIT_CARD')}
+                    className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col justify-between space-y-3 ${
+                      paymentChoice === 'CREDIT_CARD'
+                        ? 'bg-slate-50 border-slate-900 shadow-xs'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center shrink-0">
+                          <CreditCard className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-900 text-sm">Cartão de Crédito</p>
+                          <p className="text-[11px] text-slate-500 font-medium">Em até 12x no cartão</p>
+                        </div>
+                      </div>
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        checked={paymentChoice === 'CREDIT_CARD'}
+                        onChange={() => setPaymentChoice('CREDIT_CARD')}
+                        className="accent-slate-900 mt-1"
+                      />
+                    </div>
+                    <div className="text-[11px] text-slate-600 bg-white/80 p-2.5 rounded-lg border border-slate-200/60 space-y-1">
+                      <p className="font-medium text-slate-900">
+                        ✓ Parcelamento em até 12x sem burocracia
+                      </p>
+                      <p className="text-[10px] text-slate-500">
+                        Protegido pelo antifraude bancário e segurança InfinitePay.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* InfinitePay Trust & Security Info */}
+                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-3 text-xs text-slate-600">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span className="text-[11px]">
+                      Você será redirecionado para o ambiente seguro oficial da <strong>InfinitePay</strong> para concluir o pagamento.
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 hidden sm:inline">
+                    SSL 256-Bit
+                  </span>
+                </div>
+
+                {/* Action Buttons */}
                 <div className="flex gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => setStep(2)}
-                    className="w-1/3 py-2.5 bg-slate-100 text-slate-700 font-semibold rounded-lg text-xs hover:bg-slate-200"
+                    disabled={isSubmitting || isRedirecting}
+                    className="w-1/3 py-3 bg-slate-100 text-slate-700 font-semibold rounded-xl text-xs hover:bg-slate-200 transition-colors"
                   >
                     Voltar
                   </button>
                   <button
                     type="button"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isRedirecting}
                     onClick={handleFinalizeOrder}
-                    className="flex-1 btn-primary-gradient py-3.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="flex-1 py-3.5 px-4 bg-gradient-to-r from-orange-600 via-orange-500 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
                   >
-                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>CONFIRMAR PEDIDO • GERAR CÓDIGO</span>}
+                    {isSubmitting || isRedirecting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-white" />
+                        <span>Gerando Link Seguro InfinitePay...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-4 h-4" />
+                        <span>Pagar com Pix ou Cartão via InfinitePay (R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -629,7 +782,7 @@ export const CheckoutView: React.FC = () => {
                   </p>
                 </div>
 
-                {completedOrder.paymentMethod === 'PIX' && (
+                {(completedOrder.paymentMethod === 'PIX' || completedOrder.paymentMethod === 'INFINITEPAY') && (
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-left space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-slate-900">Pagamento via PIX (10% OFF aplicado)</span>
@@ -731,7 +884,7 @@ export const CheckoutView: React.FC = () => {
                   </span>
                 </div>
 
-                {paymentMethod === 'PIX' && (
+                {paymentChoice === 'PIX' && (
                   <div className="flex justify-between text-emerald-700 font-semibold">
                     <span>Desconto PIX (10% OFF)</span>
                     <span>- R$ {pixDiscount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>

@@ -10,19 +10,30 @@ import { SolucoesIgrejasView } from './components/SolucoesIgrejasView';
 import { QuemSomosView } from './components/QuemSomosView';
 import { OrdersTrackerView } from './components/OrdersTrackerView';
 import { AdminView } from './components/AdminView';
+import { FloatingAssistant } from './components/FloatingAssistant';
+import { ObrigadoView } from './components/ObrigadoView';
 import { useStore } from './lib/store';
 import { CheckCircle2, Info, AlertTriangle } from 'lucide-react';
 
 export default function App() {
   const { currentView, selectedProductId, toastMessage, setCurrentView } = useStore();
 
-  // Listen to browser hash or URL path for /admin direct navigation
+  // Listen to browser hash or URL path for /admin and /obrigado navigation
   useEffect(() => {
     const handleLocationChange = () => {
       const path = window.location.pathname;
       const hash = window.location.hash;
+      const search = window.location.search;
+
       if (path === '/admin' || hash === '#/admin' || hash === '#admin') {
         setCurrentView('admin');
+      } else if (
+        path.startsWith('/obrigado') || 
+        hash.startsWith('#/obrigado') || 
+        hash.startsWith('#obrigado') || 
+        search.includes('nsu=')
+      ) {
+        setCurrentView('obrigado');
       }
     };
 
@@ -79,10 +90,14 @@ export default function App() {
             {currentView === 'about' && <QuemSomosView />}
             {currentView === 'contact' && <QuemSomosView />}
             {currentView === 'orders-tracker' && <OrdersTrackerView />}
+            {currentView === 'obrigado' && <ObrigadoView />}
           </main>
 
           {/* Main Store Footer */}
           <Footer />
+
+          {/* Floating Left Assistant & Official WhatsApp / Instagram Links */}
+          <FloatingAssistant />
         </>
       )}
 
