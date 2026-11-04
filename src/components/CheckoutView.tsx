@@ -262,7 +262,7 @@ export const CheckoutView: React.FC = () => {
       if (result.success && result.url) {
         setCheckoutRedirectUrl(result.url);
         setIsRedirecting(true);
-        clearCart();
+        // Do NOT clear cart here - it will be cleared in ObrigadoView after payment success
         showToast('Link do Checkout InfinitePay gerado! Abrindo aba de pagamento...', 'success');
 
         // Open InfinitePay Checkout in a new tab

@@ -21,7 +21,7 @@ import { Order } from '../types';
 import { checkInfinitePayPaymentStatus } from '../lib/infinitepay';
 
 export const ObrigadoView: React.FC = () => {
-  const { orders, settings, navigateToHome, setCurrentView, showToast } = useStore();
+  const { orders, settings, navigateToHome, setCurrentView, showToast, clearCart } = useStore();
 
   const [orderNsu, setOrderNsu] = useState<string>('');
   const [matchingOrder, setMatchingOrder] = useState<Order | null>(null);
@@ -80,6 +80,7 @@ export const ObrigadoView: React.FC = () => {
       const res = await checkInfinitePayPaymentStatus(nsuToVerify);
       if (res.paid) {
         setPaymentStatus('paid');
+        clearCart(); // <--- Clear here
         showToast('Pagamento confirmado via InfinitePay!', 'success');
       } else {
         setPaymentStatus('pending');
